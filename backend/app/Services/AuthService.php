@@ -42,4 +42,11 @@ class AuthService
             'token' => $token,
         ];
     }
+
+    public function logout(User $user): void
+    {
+        /** @var \Laravel\Sanctum\PersonalAccessToken $token */
+        $token = $user->currentAccessToken();
+        $token->delete();
+    }
 }
