@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use Illuminate\Http\Request;
@@ -40,4 +41,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/products/{product}', [ProductController::class, 'update']);
         Route::delete('/products/{product}', [ProductController::class, 'destroy']);
     });
+});
+
+// Transaction
+Route::middleware('auth:sanctum')->group(function () {
+    // Admin & Kasir sama-sama boleh buat transaksi & lihat riwayat
+    Route::post('/transactions', [TransactionController::class, 'store']);
+    Route::get('/transactions', [TransactionController::class, 'index']);
+    Route::get('/transactions/{transaction}', [TransactionController::class, 'show']);
 });

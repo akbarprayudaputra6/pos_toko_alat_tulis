@@ -17,7 +17,7 @@ class Product extends Model
         'name',
         'sku',
         'price',
-        'stok'
+        'stock'
     ];
 
     public function transactionItem(): HasMany
