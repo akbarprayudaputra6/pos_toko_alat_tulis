@@ -3,6 +3,7 @@
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -49,4 +50,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/transactions', [TransactionController::class, 'store']);
     Route::get('/transactions', [TransactionController::class, 'index']);
     Route::get('/transactions/{transaction}', [TransactionController::class, 'show']);
+});
+
+// Dashboard 
+Route::middleware(['auth:sanctum', 'role:admin'])->prefix('dashboard')->group(function () {
+    Route::get('/summary', [DashboardController::class, 'summary']);
+    Route::get('/today-sales', [DashboardController::class, 'todaySales']);
+    Route::get('/top-products', [DashboardController::class, 'topProducts']);
 });
