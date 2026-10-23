@@ -8,6 +8,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     $e instanceof NotFoundHttpException => 404,
                     $e instanceof AuthenticationException => 401,
                     $e instanceof AuthorizationException => 403,
+                    $e instanceof HttpExceptionInterface => $e->getStatusCode(),
                     default => 500,
                 };
 
@@ -42,7 +44,6 @@ return Application::configure(basePath: dirname(__DIR__))
                     $e instanceof NotFoundHttpException => 'Data yang dicari tidak ditemukan.',
                     $e instanceof AuthenticationException => 'Silakan login terlebih dahulu.',
                     $e instanceof AuthorizationException => 'Anda tidak memiliki akses untuk aksi ini.',
-                    // $status === 500 => 'Terjadi kesalahan pada server.',
                     default => $e->getMessage(),
                 };
 
