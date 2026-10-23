@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('sku')->unique();
             $table->decimal('price', 12, 2);
             $table->integer('stock')->default(0);
+            $table->softDeletes();
             $table->timestamps();
         });
     }
