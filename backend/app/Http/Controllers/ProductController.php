@@ -16,9 +16,15 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
+        $validated = $request->validate([
+            'category_id' => 'nullable|integer',
+        ]);
+
+        $categoryId = $validated['category_id'] ?? null;
+
         $products = $this->productService->getAll(
             search: $request->query('search'),
-            categoryId: $request->query('category_id'),
+            categoryId: $categoryId,
         );
 
         return response()->json($products);
