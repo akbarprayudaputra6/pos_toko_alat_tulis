@@ -15,6 +15,11 @@ class SecurityHeaders
      */
     public function handle(Request $request, Closure $next): Response
     {
-        return $next($request);
+        $response = $next($request);
+
+        // Tambahkan header pencegah MIME-sniffing
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
+
+        return $response;
     }
 }
