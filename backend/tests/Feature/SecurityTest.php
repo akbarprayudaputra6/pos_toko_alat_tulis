@@ -263,7 +263,7 @@ class SecurityTest extends TestCase
 
         $this->assertNoServerError($res, 'nama produk: ' . $payload);
         $this->assertTrue(Schema::hasTable('products'));
-        if ($res->successful()) {
+        if ($res->isSuccessful()) {
             $this->assertDatabaseHas('products', ['name' => $payload]);
         }
     }
