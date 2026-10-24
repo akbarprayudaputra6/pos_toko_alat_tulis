@@ -44,6 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     $e instanceof NotFoundHttpException => 'Data yang dicari tidak ditemukan.',
                     $e instanceof AuthenticationException => 'Silakan login terlebih dahulu.',
                     $e instanceof AuthorizationException => 'Anda tidak memiliki akses untuk aksi ini.',
+                    $status === 500 => 'Terjadi kesalahan internal pada server.', // Tambahkan baris ini
                     default => $e->getMessage(),
                 };
 
