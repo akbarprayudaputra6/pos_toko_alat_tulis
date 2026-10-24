@@ -66,7 +66,7 @@ class TransactionService
      */
     public function getAll(User $requester): LengthAwarePaginator
     {
-        return Transaction::with('items.product', 'user')
+        return Transaction::with('transactionItem.product', 'user')
             ->when($requester->role !== 'admin', fn($query) => $query->where('user_id', $requester->id))
             ->latest()
             ->paginate(15);
@@ -78,7 +78,7 @@ class TransactionService
      */
     public function getDetail(User $requester, int $transactionId): Transaction
     {
-        $transaction = Transaction::with('items.product', 'user')->findOrFail($transactionId);
+        $transaction = Transaction::with('transactionItem.product', 'user')->findOrFail($transactionId);
 
         if ($requester->role !== 'admin' && $transaction->user_id !== $requester->id) {
             throw ValidationException::withMessages([

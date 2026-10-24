@@ -49,7 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin & Kasir sama-sama boleh buat transaksi & lihat riwayat
     Route::post('/transactions', [TransactionController::class, 'store']);
     Route::get('/transactions', [TransactionController::class, 'index']);
-    Route::get('/transactions/{transaction}', [TransactionController::class, 'show']);
+    Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->whereNumber('transaction');
 });
 
 // Dashboard 
