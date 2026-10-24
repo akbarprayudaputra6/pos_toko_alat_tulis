@@ -1,66 +1,190 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# POS Toko Alat Tulis
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+![Tests](https://github.com/akbarprayudaputra6/pos_toko_alat_tulis/actions/workflows/tests.yml/badge.svg)
 
-## About Laravel
+REST API untuk sistem kasir (Point of Sale) toko alat tulis. Kasir mencatat penjualan, stok berkurang otomatis, dan admin memantau penjualan lewat dashboard.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+> Status: backend API selesai dan teruji. Frontend (React) dalam perencanaan.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+<!-- TODO: tambahkan tangkapan layar atau GIF demo di sini kalau frontend sudah ada -->
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Fitur
 
-## Learning Laravel
+- **Autentikasi** dengan token (Laravel Sanctum): register, login, logout, profil.
+- **Dua role**: `admin` dan `kasir`, dengan hak akses berbeda.
+- **Kategori dan produk**: kelola, cari, dan filter.
+- **Transaksi**: checkout beberapa item sekaligus, stok berkurang otomatis, nomor invoice otomatis (`INV-YYYYMMDD-0001`), riwayat transaksi.
+- **Dashboard admin**: penjualan hari ini, produk terlaris 30 hari, daftar stok menipis.
+- **Keamanan**: pembatasan percobaan login (rate limit), validasi input ketat, tes SQL injection dan kontrol akses.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Teknologi
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+| Bagian | Teknologi |
+| --- | --- |
+| Backend | Laravel 11 (PHP 8.2+) |
+| Autentikasi | Laravel Sanctum (Bearer token) |
+| Database | MySQL (pengembangan), SQLite memori (tes) |
+| Pengujian | PHPUnit 11, GitHub Actions (CI) |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Cara menjalankan
 
-## Laravel Sponsors
+Kebutuhan: PHP 8.5+, Composer, dan MySQL.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+git clone https://github.com/akbarprayudaputra6/pos_toko_alat_tulis.git
+cd pos_toko_alat_tulis/backend
 
-### Premium Partners
+composer install
+cp .env.example .env
+php artisan key:generate
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+Atur koneksi database di `.env` (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`), lalu:
 
-## Contributing
+```bash
+php artisan migrate --seed
+php artisan serve
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+API berjalan di `http://localhost:8000/api`.
 
-## Code of Conduct
+<!-- TODO: tulis akun demo dari seeder, contoh: admin@toko.test / password -->
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Menjalankan tes
 
-## Security Vulnerabilities
+```bash
+php artisan test
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Tes memakai SQLite di memori, jadi database pengembangan Anda tidak tersentuh.
 
-## License
+## Ringkasan endpoint
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Semua endpoint berawalan `/api`. Selain register dan login, semua butuh header `Authorization: Bearer <token>`.
+
+| Metode | Alamat | Fungsi | Akses |
+| --- | --- | --- | --- |
+| POST | `/register` | Daftar akun (selalu role kasir) | publik |
+| POST | `/login` | Masuk, mendapat token | publik |
+| GET | `/me` | Profil pengguna saat ini | login |
+| POST | `/logout` | Cabut token | login |
+| GET | `/categories` | Daftar kategori | login |
+| GET | `/products` | Daftar produk (cari dan filter) | login |
+| POST | `/transactions` | Checkout | login |
+| GET | `/transactions` | Riwayat (kasir: milik sendiri, admin: semua), 15 per halaman | login |
+| GET | `/transactions/{id}` | Detail transaksi | pemilik atau admin |
+| GET | `/dashboard/summary` | Ringkasan hari ini, terlaris, stok menipis | admin |
+| GET | `/dashboard/today-sales` | Penjualan hari ini | admin |
+| GET | `/dashboard/top-products` | Produk terlaris | admin |
+
+<!-- TODO: cocokkan tabel ini dengan `php artisan route:list`, dan tambahkan endpoint kelola kategori dan produk yang belum tercantum -->
+
+Contoh checkout:
+
+```http
+POST /api/transactions
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "items": [
+    { "product_id": 1, "quantity": 2 },
+    { "product_id": 5, "quantity": 1 }
+  ]
+}
+```
+
+## Skema database
+
+```mermaid
+erDiagram
+    users ||--o{ transactions : mencatat
+    categories ||--o{ products : memiliki
+    transactions ||--|{ transaction_items : berisi
+    products ||--o{ transaction_items : terjual_sebagai
+
+    users {
+        bigint id
+        string name
+        string email
+        string password
+        string role
+    }
+    categories {
+        bigint id
+        string name
+    }
+    products {
+        bigint id
+        string name
+        string sku
+        decimal price
+        int stock
+        bigint category_id
+    }
+    transactions {
+        bigint id
+        string invoice_number
+        bigint user_id
+        decimal total_amount
+    }
+    transaction_items {
+        bigint id
+        bigint transaction_id
+        bigint product_id
+        int quantity
+        decimal price_at_sale
+    }
+```
+
+<!-- TODO: sesuaikan nama dan jumlah kolom dengan migrasi Anda -->
+
+## Keputusan teknis
+
+Bagian ini menjelaskan *mengapa*, bukan hanya *apa*.
+
+- **Harga disimpan sebagai snapshot** (`price_at_sale`). Harga produk bisa berubah, tetapi transaksi lama harus tetap menampilkan harga saat itu terjadi.
+- **Checkout bersifat atomik.** Semua perubahan (pengurangan stok dan pencatatan item) berjalan dalam satu `DB::transaction()`. Jika satu item gagal, semuanya dibatalkan.
+- **Total dan harga dihitung server.** Nilai `price`, `total_amount`, `user_id`, atau `invoice_number` yang dikirim klien diabaikan.
+- **Role ditentukan server.** Pendaftaran publik selalu menghasilkan role `kasir`. Admin dibuat lewat seeder, sehingga tidak ada jalur eskalasi hak akses.
+- **Kontrol akses per objek.** Kasir hanya bisa membaca transaksi miliknya sendiri (mencegah IDOR).
+- **Arsitektur berlapis.** Route, controller tipis, FormRequest untuk validasi, dan service untuk logika bisnis.
+- **Penanganan error terpusat.** Semua error dikembalikan sebagai JSON `{"message": ...}` dengan status yang tepat, tanpa membocorkan detail internal.
+- **Konfirmasi password dicek di frontend.** API hanya menerima `name`, `email`, dan `password`.
+
+## Pengujian dan keamanan
+
+Pengujian otomatis mencakup:
+
+- autentikasi, rate limit, dan pencabutan token,
+- validasi input dan nilai ekstrem,
+- logika stok, rollback, dan snapshot harga,
+- kontrol akses antar role dan antar pengguna,
+- serangan umum: SQL injection, XSS pada respons JSON, mass assignment, dan kebocoran pesan error.
+
+Setiap `push` menjalankan seluruh tes di GitHub Actions.
+
+## Rencana
+
+- [ ] Frontend React (login dan halaman kasir)
+- [ ] Void atau retur transaksi
+- [ ] Laporan penjualan per periode dengan ekspor CSV
+- [ ] Deploy dengan data demo
+
+## Struktur proyek
+
+```text
+backend/
+  app/
+    Http/Controllers/    controller tipis
+    Http/Requests/       validasi input
+    Services/            logika bisnis
+    Models/
+  database/              migrasi dan seeder
+  routes/api.php
+  tests/Feature/         tes API
+```
+
+## Pembuat
+
+Akbar Prayuda Putra — [github.com/akbarprayudaputra6](https://github.com/akbarprayudaputra6)
