@@ -7,6 +7,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -43,6 +44,16 @@ return Application::configure(basePath: dirname(__DIR__))
                     $e instanceof HttpExceptionInterface => $e->getStatusCode(),
                     default => 500,
                 };
+
+                if ($status === 429) {
+                    Log::warning('security.rate_limited', ['path' => $request->path()]);
+                }
+                if ($status === 403) {
+                    Log::notice('security.forbidden', [
+                        'path'    => $request->path(),
+                        'user_id' => $request->user()?->id,
+                    ]);
+                }
 
                 $message = match (true) {
                     $e instanceof ModelNotFoundException,
