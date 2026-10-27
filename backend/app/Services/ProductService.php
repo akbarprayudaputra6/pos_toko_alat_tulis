@@ -27,23 +27,26 @@ class ProductService
             $data['sku'] = $this->resolveSku($data);
         }
 
-        return Product::create($data);
+        $product = Product::create($data);
 
-        Log::info('product.created', ['product_id' => $product->id, 'by' => Auth::id()]);
+        Log::info('product.created', [
+            'product_id' => $product->id,
+            'by' => Auth::id()
+        ]);
+
+        return $product;
     }
 
     public function update(Product $product, array $data): Product
     {
-        $oldPrice = $product->price;
-
         $product->update($data);
 
-        if ($product->price != $oldPrice) {
+        if ($product->wasChanged('price')) {
             Log::info('product.price_changed', [
                 'product_id' => $product->id,
-                'from' => $oldPrice,
-                'to' => $product->price,
-                'by' => Auth::id(),
+                'from'       => $product->getOriginal('price'),
+                'to'         => $product->price,
+                'by'         => Auth::id(),
             ]);
         }
 
