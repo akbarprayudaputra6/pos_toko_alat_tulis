@@ -7,7 +7,9 @@ use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class TransactionService
@@ -29,6 +31,13 @@ class TransactionService
                 }
 
                 if ($product->stock < $item['quantity']) {
+                    Log::warning('transaction.failed', [
+                        'user_id'    => Auth::id(),
+                        'product_id' => $product->id,
+                        'requested'  => $item['quantity'],
+                        'available'  => $product->stock,
+                    ]);
+
                     throw ValidationException::withMessages([
                         'items' => "Stok {$product->name} tidak cukup. Sisa stok: {$product->stock}.",
                     ]);
@@ -55,10 +64,20 @@ class TransactionService
 
             foreach ($transactionItemsData as $itemData) {
                 $transaction->transactionItem()->create($itemData);
+                if ($product->stock <= 10) {
+                    Log::info('stock.low', ['product_id' => $product->id, 'stock' => $product->stock]);
+                }
             }
 
             return $transaction->load('transactionItem.product', 'user');
         });
+
+        Log::info('transaction.created', [
+            'invoice' => $transaction->invoice_number,
+            'user_id' => $transaction->user_id,
+            'total'   => $transaction->total_amount,
+            'items'   => count($items),
+        ]);
     }
 
     /**
