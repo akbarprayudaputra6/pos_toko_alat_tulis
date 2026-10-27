@@ -22,6 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->statefulApi();
 
+        $middleware->api(prepend: [
+            \App\Http\Middleware\SetRequestId::class,
+        ]);
+
         $middleware->api(append: [
             \App\Http\Middleware\SecurityHeaders::class,
             \App\Http\Middleware\RequestContext::class,

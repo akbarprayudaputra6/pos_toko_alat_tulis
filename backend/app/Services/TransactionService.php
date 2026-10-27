@@ -69,15 +69,15 @@ class TransactionService
                 }
             }
 
+            Log::info('transaction.created', [
+                'invoice' => $transaction->invoice_number,
+                'user_id' => $transaction->user_id,
+                'total'   => $transaction->total_amount,
+                'items'   => count($items),
+            ]);
+
             return $transaction->load('transactionItem.product', 'user');
         });
-
-        Log::info('transaction.created', [
-            'invoice' => $transaction->invoice_number,
-            'user_id' => $transaction->user_id,
-            'total'   => $transaction->total_amount,
-            'items'   => count($items),
-        ]);
     }
 
     /**
