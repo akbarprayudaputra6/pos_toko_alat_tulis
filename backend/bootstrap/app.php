@@ -52,7 +52,6 @@ return Application::configure(basePath: dirname(__DIR__))
                     $status === 500 => 'Terjadi kesalahan internal pada server.', // Tambahkan baris ini
                     default => $e->getMessage(),
                 };
-
                 return response()->json([
                     'message' => $message,
                 ], $status);
