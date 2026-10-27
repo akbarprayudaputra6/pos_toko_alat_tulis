@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -26,11 +28,24 @@ class ProductService
         }
 
         return Product::create($data);
+
+        Log::info('product.created', ['product_id' => $product->id, 'by' => Auth::id()]);
     }
 
     public function update(Product $product, array $data): Product
     {
+        $oldPrice = $product->price;
+
         $product->update($data);
+
+        if ($product->price != $oldPrice) {
+            Log::info('product.price_changed', [
+                'product_id' => $product->id,
+                'from' => $oldPrice,
+                'to' => $product->price,
+                'by' => Auth::id(),
+            ]);
+        }
 
         return $product->load('category');
     }
@@ -38,6 +53,8 @@ class ProductService
     public function delete(Product $product): void
     {
         $product->delete();
+
+        Log::info('product.deleted', ['product_id' => $product->id, 'by' => Auth::id()]);
     }
 
     // SKU
