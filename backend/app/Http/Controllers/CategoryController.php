@@ -20,6 +20,13 @@ class CategoryController extends Controller
         return response()->json($categories);
     }
 
+    public function show(int $id)
+    {
+        $category = $this->categoryService->getById($id);
+
+        return response()->json($category);
+    }
+
     public function store(StoreCategoryRequest $request)
     {
         $category = $this->categoryService->create($request->validated());

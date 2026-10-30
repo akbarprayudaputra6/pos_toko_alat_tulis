@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->group(function () {
 // Category Route
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/categories', [CategoryController::class, 'index']); // semua role bisa lihat
+    Route::get('/categories/{id}', [CategoryController::class, 'show'])->where('id', '[0-9]{1,18}');
 
     Route::middleware('role:admin')->group(function () {
         Route::post('/categories', [CategoryController::class, 'store']);

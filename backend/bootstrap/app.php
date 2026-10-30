@@ -63,8 +63,10 @@ return Application::configure(basePath: dirname(__DIR__))
                     $e instanceof ModelNotFoundException,
                     $e instanceof NotFoundHttpException => 'Data yang dicari tidak ditemukan.',
                     $e instanceof AuthenticationException => 'Silakan login terlebih dahulu.',
-                    $e instanceof AuthorizationException => 'Anda tidak memiliki akses untuk aksi ini.',
-                    $status === 500 => 'Terjadi kesalahan internal pada server.', // Tambahkan baris ini
+                    $status === 403 => 'Anda tidak memiliki akses untuk aksi ini.',
+                    $status === 405 => 'Metode HTTP tidak diizinkan untuk alamat ini.',
+                    $status === 429 => 'Terlalu banyak percobaan. Coba lagi sebentar lagi.',
+                    $status === 500 => 'Terjadi kesalahan internal pada server.',
                     default => $e->getMessage(),
                 };
                 return response()->json([

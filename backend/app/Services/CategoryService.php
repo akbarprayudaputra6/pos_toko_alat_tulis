@@ -15,6 +15,11 @@ class CategoryService
         return Category::withCount('products')->get();
     }
 
+    public function getById(int $id)
+    {
+        return Category::findOrFail($id);
+    }
+
     public function create(array $data): Category
     {
         $category = Category::create($data);

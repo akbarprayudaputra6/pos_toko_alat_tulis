@@ -91,6 +91,30 @@ class CategoryTest extends TestCase
         $this->assertDatabaseHas('categories', ['name' => 'Pena 筆 ñ 📝']);
     }
 
+    // ---------- Show ------------
+
+    public function test_category_detail_returns_the_category(): void
+    {
+        $this->asKasir();
+        $category = $this->makeCategory("Pensil");
+
+        $this->getJson("/api/categories/{$category->id}")
+            ->assertOk()
+            ->assertJsonFragment(['name' => 'Pensil']);
+    }
+
+    public function test_unknown_category_returns_404(): void
+    {
+        $this->asKasir();
+
+        $this->getJson('/api/categories/999999')->assertNotFound();
+    }
+
+    public function test_guest_cannot_view_a_category(): void
+    {
+        $this->getJson('/api/categories/1')->assertUnauthorized();
+    }
+
     // ---------- Update ----------
 
     public function test_admin_can_update_category(): void
