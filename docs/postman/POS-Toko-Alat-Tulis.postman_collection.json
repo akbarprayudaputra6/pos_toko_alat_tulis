@@ -1,0 +1,923 @@
+{
+  "info": {
+    "name": "POS Toko Alat Tulis API",
+    "_postman_id": "510046c7-3f85-43e0-91bc-462bb2ea03e9",
+    "description": "REST API sistem kasir toko alat tulis (Laravel 11 + Sanctum).\n\n## Cara pakai\n1. Pilih environment **POS Local** di pojok kanan atas.\n2. Jalankan **1. Autentikasi > Login (admin)**. Token tersimpan otomatis.\n3. Jalankan request lain; semuanya memakai `{{token}}` otomatis.\n\n## Aturan umum\n- Semua request mengirim `Accept: application/json`.\n- Error berbentuk `{\"message\": \"...\"}`; error validasi menyertakan `errors`.\n- `401` tanpa token, `403` bila role tidak cukup, `404` bila tidak ada, `422` bila data salah, `429` bila terlalu sering.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Autentikasi",
+      "description": "Daftar dan masuk. Login dibatasi **5 percobaan per menit** (HTTP 429 bila dilampaui). Request login menyimpan token ke environment secara otomatis.",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "register"
+              ]
+            },
+            "description": "Mendaftar akun baru. **Role selalu `kasir`**; klien tidak bisa memilih role. Admin dibuat lewat seeder.\n\n**Respons gagal:** `422` bila data tidak valid atau email sudah dipakai; `429` bila terlalu sering.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{$randomFullName}}\",\n  \"email\": \"{{$randomEmail}}\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Register berhasil\", () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Masuk sebagai admin. Token disimpan otomatis ke variabel environment `token`.\n\n**Respons gagal:** `422`/`401` untuk kredensial salah; `429` setelah 5 percobaan dalam semenit.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Login berhasil\", () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "const j = pm.response.json();",
+                  "const token = j.token || (j.data && j.data.token);",
+                  "pm.test(\"Token ada di respons\", () => pm.expect(token).to.be.a(\"string\"));",
+                  "pm.environment.set(\"token\", token);",
+                  "console.log(\"Token tersimpan. Sekarang login sebagai admin.\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (kasir)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Masuk sebagai kasir. Menimpa variabel `token`, jadi semua request berikutnya berjalan sebagai kasir.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{kasir_email}}\",\n  \"password\": \"{{kasir_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Login berhasil\", () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "const j = pm.response.json();",
+                  "const token = j.token || (j.data && j.data.token);",
+                  "pm.test(\"Token ada di respons\", () => pm.expect(token).to.be.a(\"string\"));",
+                  "pm.environment.set(\"token\", token);",
+                  "console.log(\"Token tersimpan. Sekarang login sebagai kasir.\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Profil saya (me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me"
+              ]
+            },
+            "description": "Profil pengguna yang sedang login. Tidak pernah menyertakan password.\n\n**Akses:** login."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "logout"
+              ]
+            },
+            "description": "Mencabut token yang sedang dipakai. Setelah ini token tidak berlaku lagi.\n\n**Akses:** login."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Logout berhasil\", () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Kategori",
+      "description": "Kelola kategori produk. Periksa alamat dan hak akses pasti dengan `php artisan route:list`.",
+      "item": [
+        {
+          "name": "Daftar kategori",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "categories"
+              ]
+            },
+            "description": "**Akses:** login."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tambah kategori",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "categories"
+              ]
+            },
+            "description": "**Akses:** umumnya admin.\n\n**Gagal:** `422` bila nama kosong atau duplikat; `403` bila bukan admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Buku Tulis {{$randomInt}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Berhasil dibuat\", () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "const j = pm.response.json();",
+                  "const d = j.data || j;",
+                  "if (d && d.id) pm.environment.set(\"category_id\", d.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detail kategori",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/categories/{{category_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "categories",
+                "{{category_id}}"
+              ]
+            },
+            "description": "**Gagal:** `404` bila tidak ada."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ubah kategori",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/categories/{{category_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "categories",
+                "{{category_id}}"
+              ]
+            },
+            "description": "**Akses:** umumnya admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Buku Tulis (ubah)\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Hapus kategori",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/categories/{{category_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "categories",
+                "{{category_id}}"
+              ]
+            },
+            "description": "**Akses:** umumnya admin."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Terhapus\", () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Produk",
+      "description": "Kelola dan cari produk. Pencarian memeriksa nama dan SKU.",
+      "item": [
+        {
+          "name": "Daftar produk",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products?search=pensil&category_id={{category_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "pensil",
+                  "disabled": true
+                },
+                {
+                  "key": "category_id",
+                  "value": "{{category_id}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Daftar produk. Parameter `search` mencari nama atau SKU; `category_id` memfilter kategori.\n\n**Akses:** login."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tambah produk",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products"
+              ]
+            },
+            "description": "**Akses:** umumnya admin.\n\n**Gagal:** `422` untuk harga negatif, stok negatif, SKU duplikat, atau kategori tidak ada.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pensil 2B\",\n  \"sku\": \"PNS-{{$randomInt}}\",\n  \"price\": 3000,\n  \"stock\": 50,\n  \"category_id\": \"{{category_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Berhasil dibuat\", () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "const j = pm.response.json();",
+                  "const d = j.data || j;",
+                  "if (d && d.id) pm.environment.set(\"product_id\", d.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detail produk",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products/{{product_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products",
+                "{{product_id}}"
+              ]
+            },
+            "description": "**Gagal:** `404` bila tidak ada."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ubah produk",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products/{{product_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products",
+                "{{product_id}}"
+              ]
+            },
+            "description": "**Akses:** umumnya admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pensil 2B\",\n  \"sku\": \"PNS-UBAH-{{$randomInt}}\",\n  \"price\": 3500,\n  \"stock\": 50,\n  \"category_id\": \"{{category_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Hapus produk",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products/{{product_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products",
+                "{{product_id}}"
+              ]
+            },
+            "description": "**Akses:** umumnya admin."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Terhapus\", () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Transaksi",
+      "description": "Checkout dan riwayat. Harga, total, pemilik, dan nomor invoice **dihitung server**; nilai yang dikirim klien diabaikan.",
+      "item": [
+        {
+          "name": "Checkout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/transactions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "transactions"
+              ]
+            },
+            "description": "Membuat transaksi dan mengurangi stok secara atomik. Nomor invoice berformat `INV-YYYYMMDD-0001`.\n\n**Gagal:** `422` dengan `{\"message\":\"Transaksi gagal.\",\"errors\":{...}}` bila stok kurang; seluruh perubahan dibatalkan.\n\n**Akses:** login (admin dan kasir).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product_id\": \"{{product_id}}\",\n      \"quantity\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Transaksi dibuat\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "if (j.data && j.data.id) pm.environment.set(\"transaction_id\", j.data.id);",
+                  "pm.test(\"Nomor invoice berformat benar\", () => pm.expect(j.data.invoice_number).to.match(/^INV-\\d{8}-\\d{4}$/));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Riwayat transaksi",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/transactions?page=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Kasir hanya melihat miliknya, admin melihat semua. Dipaginasi **15 per halaman** (`data`, `total`, `current_page`)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detail transaksi",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/transactions/{{transaction_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "transactions",
+                "{{transaction_id}}"
+              ]
+            },
+            "description": "Pemilik atau admin. **Gagal:** `403`/`404` bila milik kasir lain; `404` untuk id tidak numerik."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Dashboard",
+      "description": "Hanya **admin**. Kasir mendapat `403`, tamu `401`.",
+      "item": [
+        {
+          "name": "Ringkasan",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/summary?low_stock_threshold=10&top_limit=5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "summary"
+              ],
+              "query": [
+                {
+                  "key": "low_stock_threshold",
+                  "value": "10",
+                  "disabled": true
+                },
+                {
+                  "key": "top_limit",
+                  "value": "5",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Penjualan hari ini, produk terlaris 30 hari, dan stok menipis.\n\n`low_stock_threshold` 0 sampai 1000 (bawaan 10), `top_limit` 1 sampai 20."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Penjualan hari ini",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/today-sales",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "today-sales"
+              ]
+            },
+            "description": "Jumlah transaksi dan total penjualan hari ini."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Produk terlaris",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/top-products?limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "top-products"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "`limit` 1 sampai 50."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
